@@ -158,6 +158,46 @@ app.post("/customers", async (req,res) => {
     }
 });
 
+app.put("/customers/:id", async (req,res) => {
+    try {
+
+        const {
+            name,
+            phone,
+            cpf, 
+            birthday
+        } = req.body;
+
+        const result = await connection.query(`SELECT * FROM customers WHERE  id = $1`, [req.params.id]);
+        
+        if(result.rows.length > 0){
+            
+            const error = clientSchema.validate(req.body).error;
+            if(error){
+                return res.sendStatus(400);
+            }
+
+            const verifyCpf = await connection.query('select * from customers where cpf = $1', [cpf]);
+        
+            if(verifyCpf.rows.id !== req.params.id && verifyCpf.rows.length > 0){
+                return res.sendStatus(409);
+            }
+
+            await connection.query(`UPDATE customers SET name = $2, phone = $3, cpf = $4, birthday = $5 WHERE id = $1`, [req.params.id, name, phone, cpf, birthday]);
+
+            res.sendStatus(200);
+
+
+
+        }else{
+            res.sendStatus(404);
+        }
+    } catch(error) {
+        console.log(error);
+        res.sendStatus(500);
+    }
+});
+
 
 app.listen(4000, () => {
   console.log('Server listening on port 4000.');
