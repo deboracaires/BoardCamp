@@ -1,5 +1,6 @@
 import express from 'express';
 import pg from 'pg';
+import dayjs from 'dayjs';
 
 import { gameSchema } from './gameSchema.js';
 import { clientSchema } from './clientSchema.js';
@@ -192,6 +193,60 @@ app.put("/customers/:id", async (req,res) => {
         }else{
             res.sendStatus(404);
         }
+    } catch(error) {
+        console.log(error);
+        res.sendStatus(500);
+    }
+});
+
+app.get("/rentals", async (req,res) => {
+    try {
+        const result = await connection.query(`SELECT * FROM rentals`);
+        res.send(result.rows);
+    } catch(error) {
+        console.log(error);
+        res.sendStatus(500);
+    }
+});
+
+app.post("/rentals", async (req,res) => {
+    try {
+        const {
+            customerId,
+            gameId,
+            daysRented
+        } = req.body;
+        
+        const verifyCostumer= await connection.query('select * from customers where id = $1', [customerId]);
+        
+        
+        if(verifyCostumer.rows.length === 0){
+            return res.sendStatus(400);
+        }
+
+        const verifyGame = await connection.query('select * from games where id = $1', [gameId]);
+
+        
+        if(verifyGame.rows.length === 0 || verifyGame.rows === null){
+            return res.sendStatus(400);
+        }
+        
+
+        if(daysRented <= 0){
+            return res.sendStatus(400);
+        }
+
+        // verificação se ainda há unidades para serem locadas
+
+        // fim disso aqui
+
+        const rentDate = dayjs().format('DD/MM/YYYY');
+        const originalPrice = Number(daysRented) * Number(verifyGame.rows[0].pricePerDay);
+        
+        await connection.query(`INSERT INTO rentals ("customerId", "gameId", "rentDate", "daysRented", "returnDate", "originalPrice", "delayFee") VALUES ($1, $2, $3, $4, $5, $6, $7)`, [customerId, gameId, rentDate, daysRented, null, originalPrice, null]);
+
+        res.sendStatus(201);
+
     } catch(error) {
         console.log(error);
         res.sendStatus(500);

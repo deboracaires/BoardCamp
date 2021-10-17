@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "dayjs": "^1.10.7",
     "joi": "^17.4.2"
   }
 }
