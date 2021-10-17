@@ -110,6 +110,22 @@ app.get("/customers", async (req,res) => {
     }
 });
 
+app.get("/customers/:id", async (req,res) => {
+    try {
+        const result = await connection.query(`SELECT * FROM customers WHERE  id = $1`, [req.params.id]);
+        
+        if(result.rows.length > 0){
+            res.send(result.rows);
+        }else{
+            res.sendStatus(404);
+        }
+        
+    } catch(error) {
+        console.log(error);
+        res.sendStatus(500);
+    }
+});
+
 app.post("/customers", async (req,res) => {
     try {
         const {
