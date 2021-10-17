@@ -18,7 +18,6 @@ app.use(express.json());
 app.get("/categories", async (req,res) => {
     try {
         const result = await connection.query(`SELECT * FROM categories`);
-        console.log(result.rows);
         res.send(result.rows);
     } catch(error) {
         console.log(error);
@@ -49,6 +48,17 @@ app.post("/categories", async  (req,res) => {
         res.sendStatus(500);
     }
 });
+
+app.get("/games", async (req,res) => {
+    try {
+        const result = await connection.query(`SELECT * FROM games`);
+        res.send(result.rows);
+    } catch(error) {
+        console.log(error);
+        res.sendStatus(500);
+    }
+});
+
 
 app.listen(4000, () => {
   console.log('Server listening on port 4000.');
