@@ -2,6 +2,7 @@ import express from 'express';
 import pg from 'pg';
 
 import { gameSchema } from './gameSchema.js';
+import { clientSchema } from './clientSchema.js';
 
 
 const { Pool } = pg;
@@ -99,7 +100,47 @@ app.post("/games", async (req,res) => {
     }
 });
 
+app.get("/customers", async (req,res) => {
+    try {
+        const result = await connection.query(`SELECT * FROM customers`);
+        res.send(result.rows);
+    } catch(error) {
+        console.log(error);
+        res.sendStatus(500);
+    }
+});
 
+app.post("/customers", async (req,res) => {
+    try {
+        const {
+            name,
+            phone,
+            cpf, 
+            birthday
+        } = req.body;
+        
+       const error = clientSchema.validate(req.body).error;
+       if(error){
+           return res.sendStatus(400);
+       }
+
+
+       const verifyCpf = await connection.query('select * from customers where cpf = $1', [cpf]);
+        
+        if(verifyCpf.rows.length > 0){
+            return res.sendStatus(409);
+        }
+
+        await connection.query(`INSERT INTO customers(name, phone, "cpf", "birthday") VALUES ($1, $2, $3, $4)`, [name, phone, cpf, birthday]);
+
+        res.sendStatus(201);
+
+
+    } catch(error) {
+        console.log(error);
+        res.sendStatus(500);
+    }
+});
 
 
 app.listen(4000, () => {
