@@ -1,6 +1,8 @@
 import express from 'express';
 import pg from 'pg';
 
+import { gameSchema } from './gameSchema.js';
+
 
 const { Pool } = pg;
 
@@ -58,6 +60,46 @@ app.get("/games", async (req,res) => {
         res.sendStatus(500);
     }
 });
+
+app.post("/games", async (req,res) => {
+    try {
+        const {
+            name,
+            image, 
+            stockTotal,
+            categoryId,
+            pricePerDay
+        } = req.body;
+        
+       const error = gameSchema.validate(req.body).error;
+       if(error){
+           return res.sendStatus(400);
+       }
+
+       const verifyCategoryId =  await connection.query('select * from categories where id = $1', [categoryId]);
+
+       if(verifyCategoryId.rows.length === 0){
+           return res.sendStatus(400);
+       }
+
+       const verifyGame = await connection.query('select * from games where name = $1', [name]);
+        
+        if(verifyGame.rows.length > 0){
+            return res.sendStatus(409);
+        }
+
+        await connection.query(`INSERT INTO games (name, image, "stockTotal", "categoryId", "pricePerDay") VALUES ($1, $2, $3, $4, $5)`, [name, image, stockTotal, categoryId, pricePerDay]);
+
+        res.sendStatus(201);
+
+
+    } catch(error) {
+        console.log(error);
+        res.sendStatus(500);
+    }
+});
+
+
 
 
 app.listen(4000, () => {
