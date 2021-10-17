@@ -20,39 +20,35 @@ app.get("/categories", async (req,res) => {
         const result = await connection.query(`SELECT * FROM categories`);
         console.log(result.rows);
         res.send(result.rows);
-    } catch(e) {
-        console.log(e);
+    } catch(error) {
+        console.log(error);
         res.sendStatus(500);
     }
 });
-// app.get('/api/products', (req, res) => {
-//   console.log(connection)
-//   connection.query('SELECT * FROM produtos').then(produtos => {
-//     res.send(produtos.rows);
-//   });
-// });
 
-// app.get('/api/products/:id', (req, res) => {
-//   const id = parseInt(req.params.id);
+app.post("/categories", async  (req,res) => {
+    try {
+        const newCategorie = req.body;
+        
+        if(!newCategorie.name){
+            return res.sendStatus(400);
+        }
 
-//   if (isNaN(id)) {
-//     return res.sendStatus(400);
-//   }
+        const verifyCategory = await connection.query('select * from categories where name = $1', [newCategorie.name]);
+        
+        if(verifyCategory.rows.length > 0){
+            return res.sendStatus(409);
+        }
+        
+        await connection.query('INSERT INTO categories (name) VALUES ($1)', [newCategorie.name]);
 
-//   connection.query('SELECT * FROM produtos WHERE id = $1;', [id]).then(result => {
-//     res.send(result.rows[0]);
+        res.sendStatus(201);
 
-//   })
-// });
-
-// app.post('/api/products', (req, res) => {
-//   const { nome, preco, condicao } = req.body;
-  
-//   connection.query('INSERT INTO produtos (nome, preco, condicao) VALUES ($1, $2, $3);', [nome, preco, condicao ])
-//     .then(result => {
-//       res.sendStatus(201);
-//     });
-// });
+    } catch(error) {
+        console.log(error);
+        res.sendStatus(500);
+    }
+});
 
 app.listen(4000, () => {
   console.log('Server listening on port 4000.');
