@@ -254,6 +254,54 @@ app.post("/rentals", async (req,res) => {
 });
 
 
+app.post("/rentals/:id/return", async (req,res) => {
+    try {
+         
+        const verifyRental= await connection.query('select * from rentals where id = $1', [req.params.id]);
+        
+        
+        if(verifyRental.rows.length === 0){
+            return res.sendStatus(404);
+        }
+
+        if(verifyRental.rows[0].returnDate !== null){
+            return res.sendStatus(400);
+        }
+
+        const returnDate = dayjs().format('YYYY-MM-DD');
+        const daysRented = verifyRental.rows[0].daysRented;
+        const rentDate = verifyRental.rows[0].rentDate;
+        
+        const verifyDate = dayjs(rentDate).add(daysRented, 'day').format('YYYY-MM-DD');
+        
+        const final = new Date(returnDate);
+        const verify = new Date(verifyDate);
+
+        const diferenceInDays = (Math.abs(final - verify)/(1000*60*60*24));
+        
+        let delayFee = 0;
+
+        if(verifyDate < Math.abs(final - verify)){
+            
+            delayFee = diferenceInDays * (verifyRental.rows[0].originalPrice / daysRented);
+
+        }else{
+            delayFee = null;
+        }
+        
+        await connection.query(`UPDATE rentals SET "returnDate" = $2, "delayFee" = $3 WHERE id = $1`, [req.params.id, returnDate, delayFee]);
+
+        res.sendStatus(200);
+
+        
+        
+
+    } catch(error) {
+        console.log(error);
+        res.sendStatus(500);
+    }
+});
+
 app.listen(4000, () => {
   console.log('Server listening on port 4000.');
 })
