@@ -201,7 +201,7 @@ app.put("/customers/:id", async (req,res) => {
 
 app.get("/rentals", async (req,res) => {
     try {
-        const result = await connection.query(`SELECT * FROM rentals`);
+        const result = await connection.query(`SELECT * FROM rentals JOIN customers ON rentals."customerId" = customers.id AND JOIN games ON rentals."gameId" = games.id`);
         res.send(result.rows);
     } catch(error) {
         console.log(error);
