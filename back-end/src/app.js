@@ -302,6 +302,27 @@ app.post("/rentals/:id/return", async (req,res) => {
     }
 });
 
+app.delete("/rentals/:id", async (req,res) => {
+    try {
+        const result = await connection.query(`SELECT * FROM rentals WHERE id = $1`, [req.params.id]);
+        
+        if(result.rows.length === 0){
+            return res.sendStatus(404);
+        }
+        if(result.rows.length > 0 && result.rows[0].returnDate !== null){
+            return res.sendStatus(400);
+        }
+        
+        await connection.query(`DELETE FROM rentals WHERE id = $1`, [req.params.id]);
+
+        res.sendStatus(200);
+
+    } catch(error) {
+        console.log(error);
+        res.sendStatus(500);
+    }
+});
+
 app.listen(4000, () => {
   console.log('Server listening on port 4000.');
 })
